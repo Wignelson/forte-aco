@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#171b1c">
+    <title>Painel da loja — Forte Aço</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body class="admin-body">
+    <p>
+      Nesse site meu vÔ ira vender ferros
+    </p>
+    <header class="site-header admin-header">
+      <a class="brand" href="index.html"><span class="brand-mark">F</span><span>FORTE<span class="brand-accent">AÇO</span><small>PAINEL DA LOJA</small></span></a><a class="admin-link" href="index.html">← Voltar à loja</a>
+    </header>
+    <main class="admin-main">
+      <div class="admin-welcome">
+        <div>
+          <p class="eyebrow">
+            ÁREA DE GESTÃO · DEMONSTRAÇÃO
+          </p>
+          <h1>
+            Seu catálogo,<br><em>do seu jeito.</em>
+          </h1>
+          <p>
+            Adicione produtos, atualize os preços e escolha as fotos que aparecem na vitrine.
+          </p>
+        </div>
+        <div class="admin-status">
+          <span></span> DADOS NESTE NAVEGADOR
+        </div>
+      </div>
+      <div class="demo-banner">
+        <strong>Protótipo para aprender</strong><span>As mudanças ficam salvas somente neste navegador. Acesso com senha, fotos online e pagamento real serão ligados na próxima etapa, com serviços seguros.</span>
+      </div>
+      <section class="admin-card">
+        <div class="admin-card-heading">
+          <div>
+            <p class="eyebrow">
+              CATÁLOGO DA LOJA
+            </p>
+            <h2>
+              Produtos <span id="admin-product-count">0</span>
+            </h2>
+          </div>
+          <button id="add-product" class="button button-dark">+ Novo produto</button>
+        </div>
+        <div class="admin-product-list" id="admin-product-list">
+        </div>
+      </section>
+      <div class="admin-learning">
+        <span class="learning-icon">✳</span>
+        <div>
+          <p class="eyebrow">
+            O QUE ESTAMOS APRENDENDO
+          </p>
+          <h2>
+            HTML organiza. CSS apresenta. JavaScript dá vida.
+          </h2>
+          <p>
+            Esta loja usa HTML para estruturar a vitrine, CSS para cores e disposição, e JavaScript para filtros, carrinho e edição dos produtos.
+          </p>
+        </div>
+      </div>
+    </main>
+    <div class="editor-modal" id="editor-modal" aria-hidden="true">
+      <form class="editor-card" id="product-form">
+        <div class="drawer-head">
+          <div>
+            <p class="eyebrow">
+              EDITAR CATÁLOGO
+            </p>
+            <h2 id="editor-title">
+              Novo produto
+            </h2>
+          </div>
+          <button type="button" class="icon-button" id="editor-close" aria-label="Fechar">×</button>
+        </div>
+        <input type="hidden" name="id">
+        <label>
+          Nome do produto<input name="name" required maxlength="70" placeholder="Ex.: Tubo metalon 40 × 40">
+        </label>
+        <div class="editor-row">
+          <label>
+            Categoria
+            <select name="category">
+              <option>
+                Perfis
+              </option>
+              <option>
+                Tubos
+              </option>
+              <option>
+                Chapas
+              </option>
+              <option>
+                Vergalhões
+              </option>
+            </select>
+          </label>
+          <label>
+            Preço (R$)<input name="price" type="number" min="0" step="0.01" required placeholder="0,00">
+          </label>
+        </div>
+        <div class="editor-row">
+          <label>
+            Unidade de venda<input name="unit" required maxlength="20" placeholder="barra de 6 m">
+          </label>
+          <label>
+            Etiqueta<input name="badge" maxlength="24" placeholder="Mais vendido">
+          </label>
+        </div>
+        <label>
+          Descrição
+          <textarea name="description" rows="3" maxlength="180" placeholder="Uma descrição curta para a vitrine"></textarea>
+        </label>
+        <label class="upload-label">
+          Foto do produto<input name="image" type="file" accept="image/*"><small>Na demonstração, a foto é armazenada só neste navegador.</small>
+        </label>
+        <div class="editor-actions">
+          <button type="button" class="button button-outline" id="cancel-editor">Cancelar</button><button class="button button-lime" type="submit">Salvar produto</button>
+        </div>
+      </form>
+    </div>
+    <div class="toast" id="toast" role="status">
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
