@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#171b1c">
+    <meta name="theme-color" content="#17324a">
     <meta name="description" content="Ferro e aço para sua obra: perfis, tubos, chapas e vergalhões.">
     <title>Forte Aço — materiais para construir</title>
     <link rel="stylesheet" href="style.css">
@@ -21,6 +21,7 @@
         <a class="admin-link" href="admin.html">Painel da loja <span>↗</span></a><button class="cart-button" id="open-cart" aria-label="Abrir carrinho">Sacola <span id="cart-count">0</span></button><button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu">☰</button>
       </div>
     </header>
+    <div id="preview-status" class="preview-status" hidden>Prévia de testes: finalização de pedidos será liberada após conectar o banco seguro da loja.</div>
     <main id="inicio">
       <section class="hero">
         <div class="hero-copy">
@@ -209,7 +210,7 @@
           Nome completo<input name="customerName" autocomplete="name" maxlength="100" required placeholder="Seu nome">
         </label>
         <label>
-          CPF<input name="cpf" inputmode="numeric" autocomplete="off" maxlength="14" required placeholder="000.000.000-00" aria-describedby="cpf-note"><small id="cpf-note">O CPF será incluído na mensagem do pedido e não ficará salvo neste site.</small>
+          CPF<input name="cpf" inputmode="numeric" autocomplete="off" maxlength="14" required placeholder="000.000.000-00" aria-describedby="cpf-note"><small id="cpf-note">O CPF será enviado ao WhatsApp e guardado na comanda privada para atendimento.</small>
         </label>
         <label>
           Telefone<input name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="16" required placeholder="(00) 00000-0000">
@@ -234,9 +235,8 @@
             </option>
           </select>
         </label>
-        <p class="privacy-note">
-          Ao continuar, seus dados e o pedido serão inseridos na mensagem do WhatsApp do vendedor. O pagamento será tratado diretamente com ele; este site não cobra o cliente.
-        </p>
+        <label class="order-consent"><input type="checkbox" name="orderConsent" required><span>Autorizo o uso do meu nome, CPF, telefone e pedido para preparar esta comanda e atender minha solicitação. Esses dados ficam visíveis apenas à administração da loja e também serão enviados ao WhatsApp do vendedor.</span></label>
+        <p class="privacy-note">O pagamento é combinado diretamente com o vendedor. Este site não processa pagamentos.</p>
         <div class="editor-actions">
           <button type="button" class="button button-outline" id="checkout-cancel">Voltar</button><button class="button button-lime" type="submit">Abrir WhatsApp <span>↗</span></button>
         </div>
@@ -264,6 +264,6 @@
     </div>
     <div class="toast" id="toast" role="status">
     </div>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>

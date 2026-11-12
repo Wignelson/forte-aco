@@ -3,37 +3,34 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#171b1c">
+    <meta name="theme-color" content="#17324a">
     <title>Painel da loja — Forte Aço</title>
     <link rel="stylesheet" href="style.css">
   </head>
   <body class="admin-body">
-    <p>
-      Nesse site meu vÔ ira vender ferros
-    </p>
     <header class="site-header admin-header">
       <a class="brand" href="index.html"><span class="brand-mark">F</span><span>FORTE<span class="brand-accent">AÇO</span><small>PAINEL DA LOJA</small></span></a><a class="admin-link" href="index.html">← Voltar à loja</a>
     </header>
-    <main class="admin-main">
+    <section class="admin-login-wrap" id="admin-setup-required" hidden><div class="admin-login-card"><p class="eyebrow">CONFIGURAÇÃO NECESSÁRIA</p><h1>Ative o acesso seguro</h1><p>O painel e as comandas estão bloqueados até conectar o banco seguro da loja e aplicar as regras de acesso.</p><a class="button button-dark" href="README.md">Ver instruções de configuração</a></div></section>
+    <section class="admin-login-wrap" id="login-section" hidden><form class="admin-login-card" id="admin-login-form"><p class="eyebrow">ÁREA RESTRITA</p><h1>Entrar no painel</h1><p>Entre com a conta autorizada para ver comandas e gerenciar a loja.</p><label>E-mail<input name="email" type="email" autocomplete="username" required></label><label>Senha<input name="password" type="password" autocomplete="current-password" required minlength="8"></label><p id="admin-login-error" class="login-error" role="alert"></p><button class="button button-lime" type="submit">Entrar com segurança</button><button class="text-button" id="reset-admin-password" type="button">Esqueci minha senha</button></form></section>
+    <main class="admin-main" id="admin-main" hidden>
       <div class="admin-welcome">
         <div>
           <p class="eyebrow">
-            ÁREA DE GESTÃO · DEMONSTRAÇÃO
+            ÁREA DE GESTÃO · ACESSO RESTRITO
           </p>
           <h1>
             Seu catálogo,<br><em>do seu jeito.</em>
           </h1>
           <p>
-            Adicione produtos, atualize os preços e escolha as fotos que aparecem na vitrine.
+            Gerencie as comandas e o catálogo da loja em um só lugar.
           </p>
         </div>
-        <div class="admin-status">
-          <span></span> DADOS NESTE NAVEGADOR
-        </div>
+        <div class="admin-status"><span></span> ÁREA PRIVADA</div>
       </div>
-      <div class="demo-banner">
-        <strong>Protótipo para aprender</strong><span>As mudanças ficam salvas somente neste navegador. Acesso com senha, fotos online e pagamento real serão ligados na próxima etapa, com serviços seguros.</span>
-      </div>
+      <div class="demo-banner"><strong>Comandas protegidas</strong><span>Somente a conta administradora pode consultar e atualizar pedidos. As comandas ficam aguardando envio até o cliente confirmar no WhatsApp.</span></div>
+      <section class="admin-card orders-dashboard" aria-labelledby="orders-title"><div class="admin-card-heading"><div><p class="eyebrow">PEDIDOS DOS CLIENTES</p><h2 id="orders-title">Comandas <span id="order-count">0</span></h2></div><button id="reload-orders" class="button button-outline" type="button">Atualizar comandas</button></div><div id="orders-list" class="orders-list"><p class="empty-state">Carregando comandas…</p></div></section>
+      <div class="admin-panel-actions"><span>Área restrita à conta administradora.</span><button id="admin-signout" class="button button-outline" type="button">Sair do painel</button></div>
       <section class="admin-card">
         <div class="admin-card-heading">
           <div>
@@ -116,7 +113,7 @@
           <textarea name="description" rows="3" maxlength="180" placeholder="Uma descrição curta para a vitrine"></textarea>
         </label>
         <label class="upload-label">
-          Foto do produto<input name="image" type="file" accept="image/*"><small>Na demonstração, a foto é armazenada só neste navegador.</small>
+          Foto do produto<input name="image" type="file" accept="image/*"><small>A foto do produto ficará no catálogo online.</small>
         </label>
         <div class="editor-actions">
           <button type="button" class="button button-outline" id="cancel-editor">Cancelar</button><button class="button button-lime" type="submit">Salvar produto</button>
@@ -125,6 +122,6 @@
     </div>
     <div class="toast" id="toast" role="status">
     </div>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>

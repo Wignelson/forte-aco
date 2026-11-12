@@ -1,11 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+[hidden]{display:none!important}
 :root {
-  --ink: #171b1c;
-  --ink-soft: #252b2c;
-  --muted: #737a77;
-  --paper: #f4f3ed;
+  --ink: #17324a;
+  --ink-soft: #234b66;
+  --muted: #6b7d88;
+  --paper: #f4f7f9;
   --white: #fff;
-  --lime: #d7f36a;
+  --lime: #2da776;
+  --blue: #1f6f96;
+  --green: #2da776;
+  --gray: #71818b;
   --line: #dfe0d8;
   --mono: 'DM Mono',monospace;
   --sans: 'DM Sans',sans-serif;
@@ -425,7 +429,7 @@ button {
   line-height: 1.08
 }
 .section-heading h2 em,.feature-copy h2 em,.contact-section h2 em {
-  color: #9ca656
+  color: #22865e
 }
 .section-intro {
   max-width: 290px;
@@ -739,16 +743,16 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #d7f36a
+  background: #2da776
 }
 .contact-section .eyebrow {
-  color: #66703c
+  color: #103d32
 }
 .contact-section h2 {
   font-size: 44px
 }
 .contact-section h2 em {
-  color: #66703c
+  color: #103d32
 }
 .contact-section .button {
   background: var(--ink);
@@ -989,7 +993,7 @@ button {
   color: #777f79
 }
 .viewer-info>span b {
-  color: #a2a85f;
+  color: #22865e;
   margin-left: 9px
 }
 .toast {
@@ -1041,7 +1045,7 @@ button {
   font-size: 57px
 }
 .admin-welcome h1 em {
-  color: #9ca656
+  color: #22865e
 }
 .admin-welcome>div>p:not(.eyebrow) {
   max-width: 460px;
@@ -1057,12 +1061,12 @@ button {
   padding-bottom: 10px
 }
 .admin-status span {
-  background: #a9bd55
+  background: #22865e
 }
 .demo-banner {
   margin: 29px 0;
-  background: #e6ebd4;
-  border-left: 3px solid #9ca656;
+  background: #e3f0e9;
+  border-left: 3px solid #22865e;
   padding: 14px 17px;
   display: flex;
   gap: 18px;
@@ -1161,11 +1165,11 @@ button {
   align-items: flex-start;
   margin-top: 28px;
   padding: 23px;
-  background: #e9eae2
+  background: #e9f0f3
 }
 .learning-icon {
   font-size: 25px;
-  color: #92994e
+  color: #22865e
 }
 .admin-learning .eyebrow {
   margin: 3px 0 8px
@@ -1221,7 +1225,7 @@ button {
   outline: 0
 }
 .editor-card input:focus,.editor-card select:focus,.editor-card textarea:focus {
-  border-color: #9ca656
+  border-color: #22865e
 }
 .editor-card textarea {
   resize: vertical
@@ -1665,7 +1669,7 @@ button {
   border-radius: 0
 }
 .checkout-card input:focus,.checkout-card select:focus {
-  border-color: #9ca656
+  border-color: #22865e
 }
 .checkout-card label small {
   display: block;
@@ -1677,7 +1681,7 @@ button {
 }
 .privacy-note {
   padding: 12px;
-  background: #e9eae2;
+  background: #e9f0f3;
   color: #626a64;
   font-size: 9px;
   line-height: 1.65;
@@ -1722,3 +1726,24 @@ button {
     font-size: 8px;
   }
 }
+
+/* Private admin access and order dashboard */
+.admin-login-wrap{min-height:calc(100vh - 90px);display:grid;place-items:center;padding:32px 18px;background:linear-gradient(145deg,#eaf2f6,#f6f9fa 58%,#e6f2eb)}
+.admin-login-card{width:min(480px,100%);padding:34px;background:#fff;border:1px solid #dbe5ea;box-shadow:0 18px 60px #17324a12}
+.admin-login-card h1{font:700 34px var(--display);letter-spacing:-.05em;margin:0 0 10px;color:var(--ink)}
+.admin-login-card>p:not(.eyebrow){font-size:13px;line-height:1.7;color:var(--muted);margin:0 0 22px}
+.admin-login-card label{display:block;font-size:11px;font-weight:700;margin:14px 0}
+.admin-login-card input{display:block;width:100%;margin-top:6px;padding:12px;border:1px solid var(--line);background:#fff}
+.admin-login-card .button{width:100%;margin-top:8px}.login-error{color:#a43d3d;font-size:11px;min-height:18px}
+.text-button{display:block;margin:14px auto 0;border:0;background:none;color:var(--blue);font-size:11px;text-decoration:underline}
+.admin-panel-actions{display:flex;justify-content:space-between;align-items:center;margin:18px 0 28px;color:var(--muted);font-size:10px}
+.orders-list{display:grid;gap:12px;padding-top:8px}.order-card{padding:20px 0;border-bottom:1px solid var(--line)}
+.order-card-head{display:flex;justify-content:space-between;align-items:start;gap:16px}.order-card-head h3{font:700 18px var(--display);margin:5px 0;color:var(--ink)}
+.order-status-label{font-size:9px;color:var(--muted);min-width:155px}.order-status-label select{display:block;width:100%;margin-top:5px;padding:9px;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.order-contact{display:flex;flex-wrap:wrap;gap:8px 22px;margin:14px 0;font-size:10px;color:#506372}.order-contact b{color:var(--ink);margin-right:5px}
+.order-items{list-style:none;padding:12px 0;margin:0;border-top:1px solid #edf1f3}.order-items li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:11px;color:#425766}
+.order-total{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid #edf1f3;font-size:11px}.order-total strong{font:700 16px var(--display);color:var(--ink)}
+.order-consent{display:flex!important;align-items:flex-start;gap:9px;font-weight:400!important;line-height:1.55;color:#4f626f}.order-consent input{margin:2px 0 0!important;width:16px!important;flex:0 0 auto}
+@media(max-width:580px){.admin-login-card{padding:24px}.admin-panel-actions{align-items:flex-start;gap:12px;flex-direction:column}.order-card-head{flex-direction:column}.order-status-label{width:100%}.order-contact{display:grid;gap:8px}}
+
+.preview-status{padding:10px 16px;text-align:center;background:#e3f0e9;color:#174f3b;border-bottom:1px solid #c8e1d4;font-size:11px;font-weight:600}

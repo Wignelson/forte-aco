@@ -1,7 +1,11 @@
-/*
- * Primeira loja didática: o navegador guarda os dados localmente.
- * Próxima etapa: autenticação, banco e fotos na nuvem com regras de acesso.
- */
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase-config.js";
+
+const backendConfigured = /^https:\/\/.+\.supabase\.co$/.test(SUPABASE_URL) && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("COLE_");
+const supabase = backendConfigured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+const adminPage = Boolean(document.getElementById("admin-product-list"));
+let adminSession = false;
+let adminAuthCheck = 0;
 const SHOP_WHATSAPP = '5511934744689'; // Número temporário do proprietário para testar a comanda.
 const PRODUCTS_KEY = 'forte-aco-products-v1';
 const CART_KEY = 'forte-aco-cart-v1';
@@ -25,7 +29,25 @@ let products = readJson(PRODUCTS_KEY, starterProducts);
 let cart = readJson(CART_KEY, []);
 const money = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0);
 const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-const saveProducts = () => localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+async function saveProductToCloud(product) {
+  if (!supabase || !adminSession) throw new Error("Entre como administrador para salvar produtos.");
+  const { error } = await supabase.from("products").upsert({ ...product, sort_order: product.sort_order ?? Date.now(), updated_at: new Date().toISOString() });
+  if (error) throw error;
+}
+async function removeProductFromCloud(id) {
+  if (!supabase || !adminSession) throw new Error("Entre como administrador para remover produtos.");
+  const { error } = await supabase.from("products").delete().eq("id", id);
+  if (error) throw error;
+}
+async function loadPublicProducts() {
+  if (supabase) {
+    const { data, error } = await supabase.from("products").select("id,name,category,price,unit,badge,description,image,shape").order("sort_order", { ascending: true });
+    if (!error && data?.length) products = data;
+    else if (error) console.error("Não foi possível carregar o catálogo online:", error.message);
+  }
+  renderCatalog();
+  renderAdmin();
+}
 const saveCart = () => localStorage.setItem(CART_KEY, JSON.stringify(cart));
 let toastTimer;
 function toast(message) {
@@ -86,6 +108,7 @@ function addToCart(id) {
   toast('Material adicionado à sua sacola.')
 }
 function openCheckout() {
+  if (!supabase) { toast('A finalização de pedidos será ativada após configurar o banco seguro da loja.'); return; }
   if (!cart.length) {
     toast('Adicione pelo menos um produto ao carrinho.');
     return
@@ -126,41 +149,42 @@ function formatPhone(value) {
   if (d.length < 3) return d ? `(${d}` : '';
   return d.length <= 10 ? d.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2') : d.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
 }
-function submitOrder(event) {
+async function submitOrder(event) {
   event.preventDefault();
-  if (!cart.length) {
-    closeCheckout();
-    toast('Seu carrinho está vazio.');
-    return
-  }
+  if (!cart.length) { closeCheckout(); toast('Seu carrinho está vazio.'); return; }
+  if (!supabase) { toast('A loja ainda não foi conectada ao banco seguro. A comanda não foi enviada.'); return; }
   const form = event.currentTarget, data = new FormData(form), name = String(data.get('customerName') || '').trim(), cpf = onlyDigits(data.get('cpf')), phone = onlyDigits(data.get('phone')), payment = String(data.get('payment') || '');
-  if (!validCpf(cpf)) {
-    form.elements.cpf.setCustomValidity('Confira o CPF informado.');
-    form.elements.cpf.reportValidity();
-    return
-  }
+  if (!validCpf(cpf)) { form.elements.cpf.setCustomValidity('Confira o CPF informado.'); form.elements.cpf.reportValidity(); return; }
   form.elements.cpf.setCustomValidity('');
-  if (phone.length < 10 || phone.length > 11) {
-    form.elements.phone.setCustomValidity('Informe um telefone com DDD.');
-    form.elements.phone.reportValidity();
-    return
-  }
+  if (phone.length < 10 || phone.length > 11) { form.elements.phone.setCustomValidity('Informe um telefone com DDD.'); form.elements.phone.reportValidity(); return; }
   form.elements.phone.setCustomValidity('');
-  if (!/^\d{10,15}$/.test(SHOP_WHATSAPP)) {
-    toast('O número de WhatsApp do vendedor ainda precisa ser configurado.');
-    return
-  }
-  const lines = cart.map(item => {
+  if (!form.elements.orderConsent.checked) { form.elements.orderConsent.reportValidity(); return; }
+  if (!/^\d{10,15}$/.test(SHOP_WHATSAPP)) { toast('O número de WhatsApp do vendedor ainda precisa ser configurado.'); return; }
+  const orderNumber = `FA-${Date.now().toString().slice(-8)}-${Math.floor(Math.random()*90+10)}`;
+  const orderItems = cart.map(item => {
     const p = products.find(x => x.id === item.id);
-    return p ? `• ${item.qty} × ${p.name} (${p.unit}) — ${money(p.price * item.qty)}` : ''
+    return p ? { product_id: p.id, name: p.name, unit: p.unit, price: Number(p.price), quantity: Number(item.qty), line_total: Number((p.price * item.qty).toFixed(2)) } : null;
   }).filter(Boolean);
-  const total = cart.reduce((sum, item) => sum + (products.find(p => p.id === item.id)?.price || 0) * item.qty, 0);
-  const orderId = `FA-${Date.now().toString().slice(-8)}`;
-  const message = [`*COMANDA FORTE AÇO — ${orderId}*`, ``, `*Cliente:* ${name}`, `*CPF:* ${formatCpf(cpf)}`, `*Telefone:* ${formatPhone(phone)}`, `*Pagamento escolhido:* ${payment}`, ``, `*Itens do pedido:*`, ...lines, ``, `*Subtotal estimado:* ${money(total)}`, `Frete, disponibilidade e pagamento serão confirmados diretamente com o vendedor.`].join('\n');
-  window.open(`https://wa.me/${SHOP_WHATSAPP}?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
-  closeCheckout();
-  closeCart();
-  toast('Comanda pronta. Toque em Enviar na conversa do WhatsApp.');
+  const total = orderItems.reduce((sum, item) => sum + item.line_total, 0);
+  const lines = orderItems.map(item => `• ${item.quantity} × ${item.name} (${item.unit}) — ${money(item.line_total)}`);
+  const message = [`*COMANDA FORTE AÇO — ${orderNumber}*`, ``, `*Cliente:* ${name}`, `*CPF:* ${formatCpf(cpf)}`, `*Telefone:* ${formatPhone(phone)}`, `*Pagamento escolhido:* ${payment}`, ``, `*Itens do pedido:*`, ...lines, ``, `*Subtotal estimado:* ${money(total)}`, `Frete, disponibilidade e pagamento serão confirmados diretamente com o vendedor.`].join('\n');
+  const waWindow = window.open('about:blank', '_blank');
+  if (!waWindow) { toast('Permita a abertura do WhatsApp para continuar.'); return; }
+  const submit = form.querySelector('[type="submit"]');
+  if (submit) submit.disabled = true;
+  try {
+    const { error } = await supabase.from('orders').insert({ order_number: orderNumber, customer_name: name, cpf, phone, payment_method: payment, items: orderItems, subtotal: Number(total.toFixed(2)), status: 'Aguardando envio' });
+    if (error) throw error;
+    waWindow.location.href = `https://wa.me/${SHOP_WHATSAPP}?text=${encodeURIComponent(message)}`;
+    closeCheckout(); closeCart();
+    cart = []; saveCart(); renderCart();
+    form.reset();
+    toast('Comanda registrada. Confirme o envio na conversa do WhatsApp.');
+  } catch (error) {
+    waWindow.close();
+    console.error('Falha ao registrar comanda:', error);
+    toast('Não foi possível registrar a comanda. Tente novamente.');
+  } finally { if (submit) submit.disabled = false; }
 }
 function openViewer(id) {
   const p = products.find(x => x.id === id);
@@ -224,30 +248,94 @@ function compressImage(file) {
     reader.readAsDataURL(file)
   })
 }
+function renderOrders(orders) {
+  const list = document.getElementById('orders-list');
+  const count = document.getElementById('order-count');
+  if (!list) return;
+  if (count) count.textContent = String(orders.length);
+  if (!orders.length) { list.innerHTML = '<p class="empty-state">Nenhuma comanda registrada.</p>'; return; }
+  list.innerHTML = orders.map(order => {
+    const date = new Date(order.created_at).toLocaleString('pt-BR');
+    const items = (order.items || []).map(item => `<li>${Number(item.quantity)} × ${escapeHtml(item.name)} (${escapeHtml(item.unit)}) <strong>${money(item.line_total)}</strong></li>`).join('');
+    return `<article class="order-card"><div class="order-card-head"><div><p class="eyebrow">${escapeHtml(order.order_number)} · ${escapeHtml(date)}</p><h3>${escapeHtml(order.customer_name)}</h3></div><label class="order-status-label">Status<select data-order-status="${escapeHtml(order.id)}"><option ${order.status==='Aguardando envio'?'selected':''}>Aguardando envio</option><option ${order.status==='Em atendimento'?'selected':''}>Em atendimento</option><option ${order.status==='Concluída'?'selected':''}>Concluída</option><option ${order.status==='Cancelada'?'selected':''}>Cancelada</option></select></label></div><div class="order-contact"><span><b>CPF</b> ${escapeHtml(formatCpf(order.cpf))}</span><span><b>Telefone</b> ${escapeHtml(formatPhone(order.phone))}</span><span><b>Pagamento</b> ${escapeHtml(order.payment_method)}</span></div><ul class="order-items">${items}</ul><div class="order-total"><span>Subtotal estimado</span><strong>${money(order.subtotal)}</strong></div></article>`;
+  }).join('');
+}
+async function loadAdminOrders() {
+  const list = document.getElementById('orders-list');
+  if (!supabase || !adminSession || !list) return;
+  list.innerHTML = '<p class="empty-state">Carregando comandas…</p>';
+  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(200);
+  if (error) { list.innerHTML = '<p class="empty-state">Não foi possível carregar as comandas. Verifique as regras do banco.</p>'; console.error(error); return; }
+  renderOrders(data || []);
+}
+async function setAdminAccess(user) {
+  const checkId = ++adminAuthCheck;
+  let authorized = false;
+  if (user && supabase) {
+    const { data, error } = await supabase.rpc('is_store_admin');
+    authorized = !error && data === true;
+  }
+  if (checkId !== adminAuthCheck) return;
+  const login = document.getElementById('login-section');
+  const setup = document.getElementById('admin-setup-required');
+  const panel = document.getElementById('admin-main');
+  adminSession = authorized;
+  if (setup) setup.hidden = Boolean(supabase);
+  if (login) login.hidden = !supabase || authorized;
+  if (panel) panel.hidden = !authorized;
+  if (user && !authorized) {
+    const error = document.getElementById('admin-login-error');
+    if (error) error.textContent = 'Esta conta não está autorizada para administrar a loja.';
+    supabase?.auth.signOut();
+  }
+  if (authorized) { loadAdminOrders(); loadPublicProducts(); }
+}
 function wireAdmin() {
+  if (!adminPage) return;
+  const loginForm = document.getElementById('admin-login-form');
+  const loginError = document.getElementById('admin-login-error');
+  if (!supabase) { setAdminAccess(null); return; }
+  supabase.auth.getSession().then(({ data }) => setAdminAccess(data.session?.user || null));
+  supabase.auth.onAuthStateChange((_event, session) => setAdminAccess(session?.user || null));
+  loginForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (loginError) loginError.textContent = '';
+    const button = loginForm.querySelector('[type="submit"]');
+    button.disabled = true;
+    const { error } = await supabase.auth.signInWithPassword({ email: loginForm.elements.email.value.trim(), password: loginForm.elements.password.value });
+    if (error && loginError) loginError.textContent = 'Não foi possível entrar. Confira a senha e tente novamente.';
+    loginForm.elements.password.value = '';
+    button.disabled = false;
+  });
+  document.getElementById('reset-admin-password')?.addEventListener('click', async () => {
+    const email = loginForm?.elements.email.value.trim();
+    if (!email) { toast('Informe o e-mail da conta administradora.'); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.href });
+    toast(error ? 'Não foi possível enviar o link de redefinição.' : 'Enviamos um link de redefinição para o e-mail administrador.');
+  });
+  document.getElementById('admin-signout')?.addEventListener('click', async () => { await supabase.auth.signOut(); });
+  document.getElementById('reload-orders')?.addEventListener('click', loadAdminOrders);
+  document.getElementById('orders-list')?.addEventListener('change', async event => {
+    const select = event.target.closest('[data-order-status]');
+    if (!select || !adminSession) return;
+    select.disabled = true;
+    const { error } = await supabase.from('orders').update({ status: select.value }).eq('id', select.dataset.orderStatus);
+    if (error) { toast('Não foi possível atualizar o status da comanda.'); await loadAdminOrders(); }
+    else toast('Status da comanda atualizado.');
+    select.disabled = false;
+  });
   document.getElementById('add-product')?.addEventListener('click', () => openEditor());
   document.getElementById('editor-close')?.addEventListener('click', closeEditor);
   document.getElementById('cancel-editor')?.addEventListener('click', closeEditor);
-  document.getElementById('editor-modal')?.addEventListener('click', e => {
-    if (e.target.id === 'editor-modal') closeEditor()
-  });
-  document.getElementById('admin-product-list')?.addEventListener('click', e => {
+  document.getElementById('editor-modal')?.addEventListener('click', e => { if (e.target.id === 'editor-modal') closeEditor(); });
+  document.getElementById('admin-product-list')?.addEventListener('click', async e => {
     const edit = e.target.closest('[data-edit]'), del = e.target.closest('[data-delete]');
-    if (edit) {
-      const p = products.find(x => x.id === edit.dataset.edit);
-      openEditor(p)
-    }
+    if (edit) openEditor(products.find(x => x.id === edit.dataset.edit));
     if (del) {
-      const p = products.find(x => x.id === del.dataset.delete);
-      if (p && confirm(`Remover “${p.name}” do catálogo?`)) {
-        products = products.filter(x => x.id !== p.id);
-        cart = cart.filter(x => x.id !== p.id);
-        saveProducts();
-        saveCart();
-        renderAdmin();
-        renderCatalog();
-        renderCart();
-        toast('Produto removido.')
+      const product = products.find(x => x.id === del.dataset.delete);
+      if (product && confirm(`Remover “${product.name}” do catálogo?`)) {
+        try { await removeProductFromCloud(product.id); products = products.filter(x => x.id !== product.id); cart = cart.filter(x => x.id !== product.id); saveCart(); renderAdmin(); renderCatalog(); renderCart(); toast('Produto removido.'); }
+        catch (error) { toast(error.message || 'Não foi possível remover o produto.'); }
       }
     }
   });
@@ -258,18 +346,12 @@ function wireAdmin() {
     try {
       const file = form.elements.image.files[0], image = file ? await compressImage(file) : form.dataset.existingImage || '';
       const product = { id: form.elements.id.value || `p-${Date.now()}`, name: form.elements.name.value.trim(), category: form.elements.category.value, price: Number(form.elements.price.value), unit: form.elements.unit.value.trim(), badge: form.elements.badge.value.trim() || form.elements.category.value.toUpperCase(), description: form.elements.description.value.trim(), image, shape: 'beam' };
+      await saveProductToCloud(product);
       const index = products.findIndex(p => p.id === product.id);
       if (index >= 0) products[index] = product; else products.unshift(product);
-      saveProducts();
-      renderAdmin();
-      renderCatalog();
-      closeEditor();
-      toast(index >= 0 ? 'Alterações salvas neste navegador.' : 'Produto adicionado ao catálogo.')
-    } catch (err) {
-      toast(err.message || 'Não foi possível salvar essa foto.')
-    } finally {
-      submit.disabled = false
-    }
+      renderAdmin(); renderCatalog(); closeEditor(); toast(index >= 0 ? 'Alterações salvas.' : 'Produto adicionado ao catálogo.');
+    } catch (err) { toast(err.message || 'Não foi possível salvar o produto.'); }
+    finally { submit.disabled = false; }
   });
 }
 function wireStore() {
@@ -355,4 +437,6 @@ function wireStore() {
   document.getElementById('menu-toggle')?.addEventListener('click', () => document.querySelector('.main-nav')?.classList.toggle('open'));
   document.querySelectorAll('.main-nav a').forEach(a => a.addEventListener('click', () => document.querySelector('.main-nav')?.classList.remove('open')));
 }
-renderCatalog(); renderAdmin(); renderCart(); wireStore(); wireAdmin();
+renderCatalog(); renderAdmin(); renderCart(); wireStore(); wireAdmin(); loadPublicProducts();
+const previewStatus = document.getElementById('preview-status');
+if (previewStatus) previewStatus.hidden = Boolean(supabase);
